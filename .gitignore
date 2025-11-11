@@ -1,0 +1,33 @@
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test Projects
+TestProject*/
+MyProject*/
+Sample*/
+
+# Temporary Files
+*.tmp
+*.log
+*.bak
+
+# Archives
+*.zip
+*.tar.gz
+*.tar
+
+# Build artifacts (if testing locally)
+build/
+.gradle/
+*.class
+*.jar
+!gradle-wrapper.jar

@@ -1,0 +1,50 @@
+{
+  "version": "1.0.2",
+  "description": "Automation template for creating Gradle test projects with IntelliJ support and Java 11",
+  "homepage": "https://github.com/alirazabrame/scoop-ali-automation",
+  "license": "MIT",
+  "url": "https://github.com/alirazabrame/scoop-ali-automation/archive/v1.0.2.zip",
+  "hash": "sha256:UPDATE_THIS_HASH_AFTER_RELEASE",
+  "extract_dir": "scoop-ali-automation-1.0.2",
+  "bin": [["scripts\\ali-automation.bat", "ali-automation"]],
+  "shortcuts": [],
+  "checkver": {
+    "github": "https://github.com/alirazabrame/scoop-ali-automation"
+  },
+  "autoupdate": {
+    "url": "https://github.com/alirazabrame/scoop-ali-automation/archive/v$version.zip",
+    "extract_dir": "scoop-ali-automation-$version"
+  },
+  "suggest": {
+    "Java 11 JDK": ["java/openjdk11", "java/temurin11-jdk"],
+    "Gradle": "gradle"
+  },
+  "notes": [
+    "✅ ALI Automation has been installed!",
+    "",
+    "📋 Prerequisites:",
+    "  Before using ali-automation, install required dependencies:",
+    "    scoop bucket add java",
+    "    scoop install openjdk11",
+    "    scoop install gradle",
+    "",
+    "🚀 Usage:",
+    "  ali-automation create-project <PROJECT_NAME>  - Create a new Gradle test project",
+    "  ali-automation version                        - Show version",
+    "  ali-automation help                           - Show help",
+    "",
+    "💡 Example:",
+    "  ali-automation create-project MyTestProject",
+    "",
+    "📦 The generated project includes:",
+    "  - Java 11 + Gradle 6.7 setup",
+    "  - Selenium WebDriver 4.6.0",
+    "  - JUnit 5 with parameterized tests",
+    "  - Allure reporting",
+    "  - CSV-driven test data",
+    "  - IntelliJ IDEA module configuration",
+    "",
+    "📖 Documentation:",
+    "  https://github.com/alirazabrame/scoop-ali-automation"
+  ]
+}
