@@ -1,11 +1,11 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "Automation template for creating Gradle test projects with IntelliJ support and Java 11",
   "homepage": "https://github.com/alirazabrame/scoop-ali-automation",
   "license": "MIT",
-  "url": "https://github.com/alirazabrame/scoop-ali-automation/archive/v1.0.2.zip",
-  "hash": "sha256:1712880c912e69349f5d515d006a25ca84132882964c52d7f7b1458f275fb732",
-  "extract_dir": "scoop-ali-automation-1.0.2",
+  "url": "https://github.com/alirazabrame/scoop-ali-automation/archive/v1.0.0.zip",
+  "hash": "",
+  "extract_dir": "scoop-ali-automation-1.0.0",
   "bin": [["scripts\\ali-automation.bat", "ali-automation"]],
   "shortcuts": [],
   "checkver": {
