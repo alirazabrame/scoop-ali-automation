@@ -50,6 +50,82 @@ function Create-GradleProject {
         exit 1
     }
     
+    # Check and install prerequisites: Scoop, Gradle, Java 11
+    Write-Host "🔍 Checking prerequisites..." -ForegroundColor Cyan
+    
+    # 1. Check if Scoop is installed
+    $scoopCmd = Get-Command scoop -ErrorAction SilentlyContinue
+    if (-not $scoopCmd) {
+        Write-Host "⚠️  Scoop package manager is not installed" -ForegroundColor Yellow
+        Write-Host "📦 Scoop is required to install Java 11 and Gradle automatically." -ForegroundColor Cyan
+        Write-Host "Would you like to install Scoop now? (Y/n): " -ForegroundColor Cyan -NoNewline
+        $response = Read-Host
+        
+        if ([string]::IsNullOrWhiteSpace($response) -or $response -match '^[Yy]') {
+            Write-Host "📥 Installing Scoop..." -ForegroundColor Cyan
+            Write-Host "⏳ This may take a few minutes..." -ForegroundColor Cyan
+            
+            try {
+                # Set execution policy for current user
+                Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+                
+                # Install Scoop
+                Invoke-RestMethod get.scoop.sh | Invoke-Expression
+                
+                # Verify installation
+                $scoopCmd = Get-Command scoop -ErrorAction SilentlyContinue
+                if ($scoopCmd) {
+                    Write-Host "✅ Scoop installed successfully!" -ForegroundColor Green
+                } else {
+                    Write-Host "❌ Scoop installation failed. Please install manually from https://scoop.sh" -ForegroundColor Red
+                    Write-Host "After installing Scoop, run this command again." -ForegroundColor Yellow
+                    exit 1
+                }
+            } catch {
+                Write-Host "❌ Error installing Scoop: $_" -ForegroundColor Red
+                Write-Host "Please install Scoop manually from https://scoop.sh" -ForegroundColor Yellow
+                exit 1
+            }
+        } else {
+            Write-Host "⚠️  Skipping Scoop installation." -ForegroundColor Yellow
+            Write-Host "💡 You will need to install Java 11 and Gradle manually to build projects." -ForegroundColor Cyan
+            Write-Host "Visit https://scoop.sh for installation instructions." -ForegroundColor Cyan
+        }
+    } else {
+        Write-Host "✅ Scoop is installed" -ForegroundColor Green
+    }
+    
+    # 2. Check and install Gradle if Scoop is available
+    $scoopCmd = Get-Command scoop -ErrorAction SilentlyContinue
+    if ($scoopCmd) {
+        $gradleCmd = Get-Command gradle -ErrorAction SilentlyContinue
+        if (-not $gradleCmd) {
+            Write-Host "⚠️  Gradle is not installed" -ForegroundColor Yellow
+            Write-Host "📦 Would you like to install Gradle now? (Y/n): " -ForegroundColor Cyan -NoNewline
+            $response = Read-Host
+            
+            if ([string]::IsNullOrWhiteSpace($response) -or $response -match '^[Yy]') {
+                Write-Host "📥 Installing Gradle via Scoop..." -ForegroundColor Cyan
+                scoop install gradle
+                
+                # Verify installation
+                $gradleCmd = Get-Command gradle -ErrorAction SilentlyContinue
+                if ($gradleCmd) {
+                    $gradleVersion = gradle --version 2>&1 | Select-String "Gradle" | Select-Object -First 1
+                    Write-Host "✅ Gradle installed successfully: $gradleVersion" -ForegroundColor Green
+                } else {
+                    Write-Host "❌ Gradle installation may have failed. Please check manually." -ForegroundColor Red
+                }
+            } else {
+                Write-Host "⚠️  Skipping Gradle installation." -ForegroundColor Yellow
+                Write-Host "💡 Install later with: scoop install gradle" -ForegroundColor Cyan
+            }
+        } else {
+            Write-Host "✅ Gradle is installed" -ForegroundColor Green
+        }
+    }
+    
+    Write-Host ""
     Get-PackagePath -ProjectName $ProjectName
     
     $ROOT_DIR = Join-Path $WORK_DIR $ProjectName
