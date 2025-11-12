@@ -4,7 +4,7 @@
   "homepage": "https://github.com/alirazabrame/scoop-ali-automation",
   "license": "MIT",
   "url": "https://github.com/alirazabrame/scoop-ali-automation/archive/v1.0.0.zip",
-  "hash": "8d5cc071d72e456a61b150efb09464d43907414c2447f39cf906e5eec1d2c4cb",
+  "hash": "27a8cca5032e0a3840c8d04035c3b3eafe814b03fb391ba156545a8f78bef4ab",
   "extract_dir": "scoop-ali-automation-1.0.0",
   "bin": [["scripts\\ali-automation.bat", "ali-automation"]],
   "shortcuts": [],
