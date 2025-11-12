@@ -24,19 +24,19 @@ Examples:
 function Get-PackagePath {
     param([string]$ProjectName)
     
-    Write-Host "📦 Enter the package name for your project (e.g., com.i2c.automation.icm):" -ForegroundColor Cyan
+    Write-Host "Enter the package name for your project (e.g., com.i2c.automation.icm):" -ForegroundColor Cyan
     $userPackage = Read-Host
     
     if ([string]::IsNullOrWhiteSpace($userPackage)) {
-        Write-Host "⚠️  No package provided. Using default: com.i2c.automation.aliapp" -ForegroundColor Yellow
+        Write-Host "No package provided. Using default: com.i2c.automation.aliapp" -ForegroundColor Yellow
         $userPackage = "com.i2c.automation.aliapp"
     }
     
-    $script:PACKAGE_PATH = $userPackage -replace '\.', '\'
+    $script:PACKAGE_PATH = $userPackage -replace '\.','\\'
     $script:PACKAGE_NAME = $userPackage
     
-    Write-Host "✅ Package set to: $PACKAGE_NAME" -ForegroundColor Green
-    Write-Host "📁 Source path: src\test\java\$PACKAGE_PATH\$ProjectName" -ForegroundColor Cyan
+    Write-Host "Package set to: $PACKAGE_NAME" -ForegroundColor Green
+    Write-Host "Source path: src\test\java\$PACKAGE_PATH\$ProjectName" -ForegroundColor Cyan
 }
 
 function Create-GradleProject {
@@ -46,7 +46,7 @@ function Create-GradleProject {
     $WORK_DIR = Get-Location
     
     if ([string]::IsNullOrWhiteSpace($ProjectName)) {
-        Write-Host "❌ Usage: ali-automation create-project <ProjectName>" -ForegroundColor Red
+        Write-Host "[ERROR] Usage: ali-automation create-project <ProjectName>" -ForegroundColor Red
         exit 1
     }
     
@@ -84,7 +84,7 @@ function Create-GradleProject {
     
     $GENERATED_DATE = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     
-    Write-Host "🚀 Creating Gradle project '$ProjectName'..." -ForegroundColor Green
+    Write-Host "[INFO] Creating Gradle project '$ProjectName'..." -ForegroundColor Green
     
     # Create build.gradle
     $BUILD_GRADLE_CONTENT = @"
@@ -333,12 +333,12 @@ public class Navigation {
     Set-Content -Path (Join-Path $ROOT_DIR "datasource\${ProjectName}_DataSource.csv") -Value "TC_ID,Scenario_Description,Application_URL"
     
     # Verify Java 11 is available
-    Write-Host "🧩 Checking Java 11 environment..." -ForegroundColor Cyan
+    Write-Host "[INFO] Checking Java 11 environment..." -ForegroundColor Cyan
     try {
         $javaVersion = java -version 2>&1 | Select-String "version" | Select-Object -First 1
-        Write-Host "✅ Java found: $javaVersion" -ForegroundColor Green
+        Write-Host "[OK] Java found: $javaVersion" -ForegroundColor Green
     } catch {
-        Write-Host "❌ Java not found. Please install Java 11 JDK:" -ForegroundColor Red
+        Write-Host "[ERROR] Java not found. Please install Java 11 JDK:" -ForegroundColor Red
         Write-Host "   scoop install openjdk11" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "After installing Java, run the command again." -ForegroundColor Yellow
@@ -346,13 +346,13 @@ public class Navigation {
     }
     
     # Verify Gradle is available
-    Write-Host "🧩 Checking Gradle installation..." -ForegroundColor Cyan
+    Write-Host "[INFO] Checking Gradle installation..." -ForegroundColor Cyan
     try {
         $gradleCheck = Get-Command gradle -ErrorAction Stop
         $gradleVersion = gradle --version 2>&1 | Select-String "Gradle" | Select-Object -First 1
-        Write-Host "✅ Gradle found: $gradleVersion" -ForegroundColor Green
+        Write-Host "[OK] Gradle found: $gradleVersion" -ForegroundColor Green
     } catch {
-        Write-Host "❌ Gradle not found. Gradle is required to set up the project wrapper." -ForegroundColor Red
+        Write-Host "[ERROR] Gradle not found. Gradle is required to set up the project wrapper." -ForegroundColor Red
         Write-Host "   scoop install gradle" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "After installing Gradle, run the command again." -ForegroundColor Yellow
@@ -360,7 +360,7 @@ public class Navigation {
     }
     
     # Create Gradle wrapper
-    Write-Host "🛠  Setting up Gradle wrapper version $GRADLE_VERSION..." -ForegroundColor Cyan
+    Write-Host "[INFO] Setting up Gradle wrapper version $GRADLE_VERSION..." -ForegroundColor Cyan
     
     Push-Location $ROOT_DIR
     
@@ -374,19 +374,19 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
     Set-Content -Path "gradle\wrapper\gradle-wrapper.properties" -Value $gradleWrapperProps
     
     # Initialize Gradle wrapper using gradle command
-    Write-Host "🔧 Initializing Gradle wrapper..." -ForegroundColor Cyan
+    Write-Host "[INFO] Initializing Gradle wrapper..." -ForegroundColor Cyan
     gradle wrapper --gradle-version $GRADLE_VERSION 2>&1 | Out-Null
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✅ Gradle wrapper initialized successfully" -ForegroundColor Green
+        Write-Host "[OK] Gradle wrapper initialized successfully" -ForegroundColor Green
     } else {
-        Write-Host "⚠️  Warning: Gradle wrapper initialization had issues, but project structure is ready" -ForegroundColor Yellow
+        Write-Host "[WARNING] Gradle wrapper initialization had issues, but project structure is ready" -ForegroundColor Yellow
     }
     
     Pop-Location
     
     # Create IntelliJ IDEA configuration
-    Write-Host "🧩 Creating IntelliJ IDEA configuration..." -ForegroundColor Cyan
+    Write-Host "[INFO] Creating IntelliJ IDEA configuration..." -ForegroundColor Cyan
     
     New-Item -ItemType Directory -Force -Path (Join-Path $ROOT_DIR ".idea") | Out-Null
     
@@ -401,7 +401,9 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
   </component>
 </project>
 "@
-    Set-Content -Path (Join-Path $ROOT_DIR ".idea\modules.xml") -Value $modulesXml
+    $ideaModulesPath = Join-Path $ROOT_DIR ".idea"
+    $ideaModulesPath = Join-Path $ideaModulesPath "modules.xml"
+    Set-Content -Path $ideaModulesPath -Value $modulesXml
     
     # Create misc.xml
     $miscXml = @"
@@ -412,7 +414,9 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
   </component>
 </project>
 "@
-    Set-Content -Path (Join-Path $ROOT_DIR ".idea\misc.xml") -Value $miscXml
+    $ideaMiscPath = Join-Path $ROOT_DIR ".idea"
+    $ideaMiscPath = Join-Path $ideaMiscPath "misc.xml"
+    Set-Content -Path $ideaMiscPath -Value $miscXml
     
     # Create vcs.xml
     $vcsXml = @"
@@ -423,7 +427,9 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
   </component>
 </project>
 "@
-    Set-Content -Path (Join-Path $ROOT_DIR ".idea\vcs.xml") -Value $vcsXml
+    $ideaVcsPath = Join-Path $ROOT_DIR ".idea"
+    $ideaVcsPath = Join-Path $ideaVcsPath "vcs.xml"
+    Set-Content -Path $ideaVcsPath -Value $vcsXml
     
     # Create compiler.xml
     $compilerXml = @"
@@ -434,7 +440,9 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
   </component>
 </project>
 "@
-    Set-Content -Path (Join-Path $ROOT_DIR ".idea\compiler.xml") -Value $compilerXml
+    $ideaCompilerPath = Join-Path $ROOT_DIR ".idea"
+    $ideaCompilerPath = Join-Path $ideaCompilerPath "compiler.xml"
+    Set-Content -Path $ideaCompilerPath -Value $compilerXml
     
     # Create .iml file
     $imlContent = @"
@@ -458,9 +466,9 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
     Set-Content -Path (Join-Path $ROOT_DIR "${ProjectName}.iml") -Value $imlContent
     
     Write-Host ""
-    Write-Host "✅ Project '$ProjectName' created successfully!" -ForegroundColor Green
-    Write-Host "📁 Location: $ROOT_DIR" -ForegroundColor Cyan
-    Write-Host "📦 Package: $PACKAGE_NAME.$PROJECT_NAME_LOWER" -ForegroundColor Cyan
+    Write-Host "[SUCCESS] Project '$ProjectName' created successfully!" -ForegroundColor Green
+    Write-Host "Location: $ROOT_DIR" -ForegroundColor Cyan
+    Write-Host "Package: $PACKAGE_NAME.$PROJECT_NAME_LOWER" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Next steps:" -ForegroundColor Yellow
     Write-Host "  1. cd $ProjectName" -ForegroundColor White
@@ -480,7 +488,7 @@ param(
 switch ($Command) {
     "create-project" {
         if ([string]::IsNullOrWhiteSpace($ProjectName)) {
-            Write-Host "❌ Project name is required" -ForegroundColor Red
+            Write-Host "[ERROR] Project name is required" -ForegroundColor Red
             Write-Host "Usage: ali-automation create-project <ProjectName>" -ForegroundColor Yellow
             exit 1
         }
