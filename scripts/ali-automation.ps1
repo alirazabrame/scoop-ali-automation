@@ -50,82 +50,6 @@ function Create-GradleProject {
         exit 1
     }
     
-    # Check and install prerequisites: Scoop, Gradle, Java 11
-    Write-Host "🔍 Checking prerequisites..." -ForegroundColor Cyan
-    
-    # 1. Check if Scoop is installed
-    $scoopCmd = Get-Command scoop -ErrorAction SilentlyContinue
-    if (-not $scoopCmd) {
-        Write-Host "⚠️  Scoop package manager is not installed" -ForegroundColor Yellow
-        Write-Host "📦 Scoop is required to install Java 11 and Gradle automatically." -ForegroundColor Cyan
-        Write-Host "Would you like to install Scoop now? (Y/n): " -ForegroundColor Cyan -NoNewline
-        $response = Read-Host
-        
-        if ([string]::IsNullOrWhiteSpace($response) -or $response -match '^[Yy]') {
-            Write-Host "📥 Installing Scoop..." -ForegroundColor Cyan
-            Write-Host "⏳ This may take a few minutes..." -ForegroundColor Cyan
-            
-            try {
-                # Set execution policy for current user
-                Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-                
-                # Install Scoop
-                Invoke-RestMethod get.scoop.sh | Invoke-Expression
-                
-                # Verify installation
-                $scoopCmd = Get-Command scoop -ErrorAction SilentlyContinue
-                if ($scoopCmd) {
-                    Write-Host "✅ Scoop installed successfully!" -ForegroundColor Green
-                } else {
-                    Write-Host "❌ Scoop installation failed. Please install manually from https://scoop.sh" -ForegroundColor Red
-                    Write-Host "After installing Scoop, run this command again." -ForegroundColor Yellow
-                    exit 1
-                }
-            } catch {
-                Write-Host "❌ Error installing Scoop: $_" -ForegroundColor Red
-                Write-Host "Please install Scoop manually from https://scoop.sh" -ForegroundColor Yellow
-                exit 1
-            }
-        } else {
-            Write-Host "⚠️  Skipping Scoop installation." -ForegroundColor Yellow
-            Write-Host "💡 You will need to install Java 11 and Gradle manually to build projects." -ForegroundColor Cyan
-            Write-Host "Visit https://scoop.sh for installation instructions." -ForegroundColor Cyan
-        }
-    } else {
-        Write-Host "✅ Scoop is installed" -ForegroundColor Green
-    }
-    
-    # 2. Check and install Gradle if Scoop is available
-    $scoopCmd = Get-Command scoop -ErrorAction SilentlyContinue
-    if ($scoopCmd) {
-        $gradleCmd = Get-Command gradle -ErrorAction SilentlyContinue
-        if (-not $gradleCmd) {
-            Write-Host "⚠️  Gradle is not installed" -ForegroundColor Yellow
-            Write-Host "📦 Would you like to install Gradle now? (Y/n): " -ForegroundColor Cyan -NoNewline
-            $response = Read-Host
-            
-            if ([string]::IsNullOrWhiteSpace($response) -or $response -match '^[Yy]') {
-                Write-Host "📥 Installing Gradle via Scoop..." -ForegroundColor Cyan
-                scoop install gradle
-                
-                # Verify installation
-                $gradleCmd = Get-Command gradle -ErrorAction SilentlyContinue
-                if ($gradleCmd) {
-                    $gradleVersion = gradle --version 2>&1 | Select-String "Gradle" | Select-Object -First 1
-                    Write-Host "✅ Gradle installed successfully: $gradleVersion" -ForegroundColor Green
-                } else {
-                    Write-Host "❌ Gradle installation may have failed. Please check manually." -ForegroundColor Red
-                }
-            } else {
-                Write-Host "⚠️  Skipping Gradle installation." -ForegroundColor Yellow
-                Write-Host "💡 Install later with: scoop install gradle" -ForegroundColor Cyan
-            }
-        } else {
-            Write-Host "✅ Gradle is installed" -ForegroundColor Green
-        }
-    }
-    
-    Write-Host ""
     Get-PackagePath -ProjectName $ProjectName
     
     $ROOT_DIR = Join-Path $WORK_DIR $ProjectName
@@ -408,68 +332,31 @@ public class Navigation {
     Set-Content -Path (Join-Path $ROOT_DIR "cleanup\${ProjectName}_CleanUp.sql") -Value "-- SQL cleanup script for $ProjectName"
     Set-Content -Path (Join-Path $ROOT_DIR "datasource\${ProjectName}_DataSource.csv") -Value "TC_ID,Scenario_Description,Application_URL"
     
-    # Verify and install Java 11 if needed
+    # Verify Java 11 is available
     Write-Host "🧩 Checking Java 11 environment..." -ForegroundColor Cyan
-    $javaInstalled = $false
-    $javaVersionCorrect = $false
-    
     try {
-        $javaCmd = Get-Command java -ErrorAction SilentlyContinue
-        if ($javaCmd) {
-            $javaVersionOutput = java -version 2>&1 | Select-String "version" | Select-Object -First 1
-            Write-Host "✅ Java found: $javaVersionOutput" -ForegroundColor Green
-            
-            # Check if it's Java 11
-            if ($javaVersionOutput -match '"11\.' -or $javaVersionOutput -match '"1\.11\.') {
-                $javaVersionCorrect = $true
-            } else {
-                Write-Host "⚠️  Java is installed but not Java 11" -ForegroundColor Yellow
-            }
-            $javaInstalled = $true
-        }
+        $javaVersion = java -version 2>&1 | Select-String "version" | Select-Object -First 1
+        Write-Host "✅ Java found: $javaVersion" -ForegroundColor Green
     } catch {
-        $javaInstalled = $false
+        Write-Host "❌ Java not found. Please install Java 11 JDK:" -ForegroundColor Red
+        Write-Host "   scoop install openjdk11" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "After installing Java, run the command again." -ForegroundColor Yellow
+        exit 1
     }
     
-    # If Java is not installed or not Java 11, offer to install
-    if (-not $javaInstalled -or -not $javaVersionCorrect) {
-        if (-not $javaInstalled) {
-            Write-Host "⚠️  Java 11 JDK is not installed" -ForegroundColor Yellow
-        }
-        
-        # Check if Scoop is available
-        $scoopCmd = Get-Command scoop -ErrorAction SilentlyContinue
-        if ($scoopCmd) {
-            Write-Host "📦 Would you like to install Java 11 JDK now? (Y/n): " -ForegroundColor Cyan -NoNewline
-            $response = Read-Host
-            
-            if ([string]::IsNullOrWhiteSpace($response) -or $response -match '^[Yy]') {
-                Write-Host "📥 Installing OpenJDK 11 via Scoop..." -ForegroundColor Cyan
-                
-                # Add java bucket if not already added
-                scoop bucket add java 2>&1 | Out-Null
-                
-                # Install OpenJDK 11
-                Write-Host "⏳ This may take a few minutes..." -ForegroundColor Cyan
-                scoop install openjdk11
-                
-                # Verify installation
-                $javaCmd = Get-Command java -ErrorAction SilentlyContinue
-                if ($javaCmd) {
-                    $javaVersionOutput = java -version 2>&1 | Select-String "version" | Select-Object -First 1
-                    Write-Host "✅ Java 11 installed successfully: $javaVersionOutput" -ForegroundColor Green
-                } else {
-                    Write-Host "❌ Java installation may have failed. Please check manually." -ForegroundColor Red
-                }
-            } else {
-                Write-Host "⚠️  Skipping Java installation. You will need Java 11 to build the project." -ForegroundColor Yellow
-                Write-Host "💡 Install later with: scoop install openjdk11" -ForegroundColor Cyan
-            }
-        } else {
-            Write-Host "⚠️  Scoop not found. Please install Java 11 manually:" -ForegroundColor Yellow
-            Write-Host "   1. Install Scoop: https://scoop.sh" -ForegroundColor White
-            Write-Host "   2. Then run: scoop bucket add java && scoop install openjdk11" -ForegroundColor White
-        }
+    # Verify Gradle is available
+    Write-Host "🧩 Checking Gradle installation..." -ForegroundColor Cyan
+    try {
+        $gradleCheck = Get-Command gradle -ErrorAction Stop
+        $gradleVersion = gradle --version 2>&1 | Select-String "Gradle" | Select-Object -First 1
+        Write-Host "✅ Gradle found: $gradleVersion" -ForegroundColor Green
+    } catch {
+        Write-Host "❌ Gradle not found. Gradle is required to set up the project wrapper." -ForegroundColor Red
+        Write-Host "   scoop install gradle" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "After installing Gradle, run the command again." -ForegroundColor Yellow
+        exit 1
     }
     
     # Create Gradle wrapper
@@ -487,17 +374,13 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
     Set-Content -Path "gradle\wrapper\gradle-wrapper.properties" -Value $gradleWrapperProps
     
     # Initialize Gradle wrapper using gradle command
-    try {
-        $gradleCheck = Get-Command gradle -ErrorAction SilentlyContinue
-        if ($gradleCheck) {
-            gradle wrapper --gradle-version $GRADLE_VERSION 2>&1 | Out-Null
-            Write-Host "✅ Gradle wrapper initialized" -ForegroundColor Green
-        } else {
-            Write-Host "⚠️  Gradle not found. Wrapper files need to be generated on first build." -ForegroundColor Yellow
-            Write-Host "💡 Install Gradle with: scoop install gradle" -ForegroundColor Cyan
-        }
-    } catch {
-        Write-Host "⚠️  Could not initialize Gradle wrapper. Will be created on first build." -ForegroundColor Yellow
+    Write-Host "🔧 Initializing Gradle wrapper..." -ForegroundColor Cyan
+    gradle wrapper --gradle-version $GRADLE_VERSION 2>&1 | Out-Null
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "✅ Gradle wrapper initialized successfully" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️  Warning: Gradle wrapper initialization had issues, but project structure is ready" -ForegroundColor Yellow
     }
     
     Pop-Location
