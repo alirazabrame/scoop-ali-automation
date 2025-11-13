@@ -1,6 +1,15 @@
 # ALI Automation - Project Creator (IntelliJ + Java 11)
 # PowerShell version for Windows
 
+# Main script parameters
+param(
+    [Parameter(Position=0)]
+    [string]$Command,
+    
+    [Parameter(Position=1)]
+    [string]$ProjectName
+)
+
 $VERSION = "1.0.0"
 
 function Show-Help {
@@ -477,14 +486,6 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-${GRADLE_VERSI
 }
 
 # Main script logic
-param(
-    [Parameter(Position=0)]
-    [string]$Command,
-    
-    [Parameter(Position=1)]
-    [string]$ProjectName
-)
-
 switch ($Command) {
     "create-project" {
         if ([string]::IsNullOrWhiteSpace($ProjectName)) {
