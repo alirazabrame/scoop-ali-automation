@@ -62,7 +62,9 @@ function Create-GradleProject {
     Get-PackagePath -ProjectName $ProjectName
     
     $ROOT_DIR = Join-Path $WORK_DIR $ProjectName
-    $PROJECT_NAME_LOWER = $ProjectName.ToLower()
+    # Convert to camelCase: remove spaces and make first letter lowercase
+    $PROJECT_NAME_LOWER = $ProjectName -replace '\s','' 
+    $PROJECT_NAME_LOWER = $PROJECT_NAME_LOWER.Substring(0,1).ToLower() + $PROJECT_NAME_LOWER.Substring(1)
     $SRC_MAIN_DIR = Join-Path $ROOT_DIR "src\main\java\$PACKAGE_PATH"
     $SRC_TEST_DIR = Join-Path $ROOT_DIR "src\test\java\$PACKAGE_PATH\$PROJECT_NAME_LOWER"
     
@@ -175,6 +177,7 @@ $Content
     # Create main test class
     $mainClassContent = @"
 import org.testng.Assert;
+import com.i2c.addons.Informix.SendQuery;
 import io.qameta.allure.Allure;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -250,6 +253,12 @@ public class $ProjectName {
     static void tearDown() {
         if (driver != null) {
             driver.quit();
+        }
+    }
+    
+    static void executeCleanUp() throws Exception {
+        try (BufferedReader br = new BufferedReader(new FileReader("cleanup/${PROJECT_NAME}_CleanUp.sql"));) {
+            SendQuery.executeICMCleanUp(br);
         }
     }
 }
