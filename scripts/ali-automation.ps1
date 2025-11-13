@@ -206,6 +206,7 @@ public class $ProjectName {
 
     @BeforeAll
     static void setup() throws Exception {
+        System.setProperty("webdriver.chrome.driver", "/Users/araza08/Data/Libraries/chromedriver-mac-x64/chromedriver");
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--remote-allow-origins=*", "ignore-certificate-errors");
         driver = new ChromeDriver(chromeOptions);
