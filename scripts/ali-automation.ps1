@@ -255,12 +255,11 @@ public class $ProjectName {
         if (driver != null) {
             driver.quit();
         }
+        // executeCleanUp();
     }
     
-    static void executeCleanUp() throws Exception {
-        try (BufferedReader br = new BufferedReader(new FileReader("cleanup/${PROJECT_NAME}_CleanUp.sql"));) {
-            SendQuery.executeICMCleanUp(br);
-        }
+    static void executeCleanUp() {
+        SendQuery.executeICMCleanUpFile("cleanup/${PROJECT_NAME}_CleanUp.sql");
     }
 }
 "@
