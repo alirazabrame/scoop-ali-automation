@@ -10,7 +10,7 @@ param(
     [string]$ProjectName
 )
 
-$VERSION = "1.0.0"
+$VERSION = "1.0.2"
 
 function Show-Help {
     Write-Host @"
