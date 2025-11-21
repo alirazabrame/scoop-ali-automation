@@ -10,7 +10,7 @@ param(
     [string]$ProjectName
 )
 
-$VERSION = "1.0.2"
+$VERSION = "1.0.3"
 
 function Show-Help {
     Write-Host @"
@@ -121,6 +121,7 @@ repositories {
 }
 
 jar {
+    zip64 true
     from sourceSets.test.output + sourceSets.test.allSource
     from { configurations.testRuntimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
@@ -194,15 +195,21 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.FileReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 public class $ProjectName {
     public static WebDriver driver;
+
+    public $ProjectName() {
+        // Constructor
+    }
 
     @BeforeAll
     static void setup() throws Exception {
@@ -216,8 +223,9 @@ public class $ProjectName {
 
     private static Object[][] provideParameters() throws Exception {
         List<${ProjectName}DataSource> csvList = new ArrayList<>();
+        Path csvPath = Paths.get("datasource/${ProjectName}_DataSource.csv");
         try (
-            BufferedReader br = new BufferedReader(new FileReader("datasource/${ProjectName}_DataSource.csv"));
+            BufferedReader br = Files.newBufferedReader(csvPath, StandardCharsets.UTF_8);
             CSVParser parser = CSVFormat.DEFAULT.withDelimiter(',').withHeader().parse(br);
         ) {
             for (CSVRecord record : parser) {
@@ -240,7 +248,6 @@ public class $ProjectName {
         try {
             // main logic
         } catch (Exception e) {
-            data.Actual_Result = "Fail";
             Assert.fail("Fail: " + e.getMessage(), e);
         }
     }
@@ -272,21 +279,14 @@ public class ${ProjectName}DataSource {
 
     String TID;
     String Scenario_Description;
-    String Module_Name;
     String Application_URL;
-    String Verify_Login;
-    String LoggedIn_UserID;
-    String LoggedIn_UserPassword;
     String OLD_Password;
     String New_Password;
     String Confirm_NewPassword;
-    String Expected_Result;
-    String Actual_Result;
-    String Test_Result;
 
     @Override
     public String toString() {
-        return "[" + TID + ',' + Module_Name + ',' + Scenario_Description + ']';
+        return "[" + TID + ',' + Scenario_Description + ']';
     }
 }
 "@
@@ -297,29 +297,25 @@ public class ${ProjectName}DataSource {
     $screenContent = @"
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import com.i2c.elements.ElementsUtility;
 
-public class ${ProjectName}Screen {
-    String oldPasswordFieldId = "old-password";
-    String newPasswordFieldId = "new-password";
-    String confirmNewPasswordFieldId = "confirm-password";
-    String submitButtonId = "continueButton";
+public final class ${ProjectName}Screen {
+    static final String oldPasswordFieldId = "old-password";
+    static final String newPasswordFieldId = "new-password";
+    static final String confirmNewPasswordFieldId = "confirm-password";
+    static final String submitButtonId = "continueButton";
 
-    private ${ProjectName}Screen() {}
-
-    private static ${ProjectName}Screen instance = null;
-
-    public static ${ProjectName}Screen getInstance() {
-        if (instance == null) {
-            instance = new ${ProjectName}Screen();
-        }
-        return instance;
+    private ${ProjectName}Screen() {
+        throw new UnsupportedOperationException("Static class");
     }
 
-    public void execute(WebDriver driver, ${ProjectName}DataSource data) {
-       driver.findElement(By.id(oldPasswordFieldId)).sendKeys(data.OLD_Password);
-       driver.findElement(By.id(newPasswordFieldId)).sendKeys(data.New_Password);
-       driver.findElement(By.id(confirmNewPasswordFieldId)).sendKeys(data.Confirm_NewPassword);
-       driver.findElement(By.id(submitButtonId)).click();
+
+    public static void execute(WebDriver driver, ${ProjectName}DataSource data) {
+        ElementsUtility.fillInputFieldAndTraverse(driver, By.id(newPasswordFieldId), data.OLD_Password);
+        ElementsUtility.fillInputFieldAndTraverse(driver, By.id(newPasswordFieldId), data.New_Password);
+        ElementsUtility.fillInputFieldAndTraverse(driver, By.id(newPasswordFieldId), data.Confirm_NewPassword);
+        
+        ElementsUtility.clickElement(driver, By.id(submitButtonId));
     }
 }
 "@
@@ -330,13 +326,17 @@ public class ${ProjectName}Screen {
     $navigationContent = @"
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import com.i2c.elements.ElementsUtility;
 
-public class Navigation {
-    private static String User_Info_Button_Id = "user-info-drop";
+public final class Navigation {
+    private static final String User_Info_Button_Id = "user-info-drop";
+
+    private Navigation() {
+        throw new UnsupportedOperationException("Static class");
+    }
+
     public static void selectUserInfoButton(WebDriver driver) throws Exception {
-        By by = By.id(User_Info_Button_Id);
-        driver.findElement(by).click();
-        Thread.sleep(2000);
+        ElementsUtility.clickElement(driver, By.id(User_Info_Button_Id));
     }
 }
 "@
